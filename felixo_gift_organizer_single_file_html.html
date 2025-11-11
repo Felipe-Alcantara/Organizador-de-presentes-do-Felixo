@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Felixo — Organizer de Presentes</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#7c3aed; --glass: rgba(255,255,255,0.03);
+      --radius:14px; --gap:16px; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%; margin:0; background:linear-gradient(180deg,#071128 0%, #071428 60%); color:#e6eef8}
+    header{display:flex;align-items:center;gap:16px;padding:20px 28px}
+    header h1{margin:0;font-size:20px;letter-spacing:0.2px}
+    .container{padding:20px 28px}
+    .topbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border-radius:var(--radius); padding:14px; box-shadow: 0 6px 18px rgba(2,6,23,0.6);}
+    .controls{display:flex;gap:8px;align-items:center}
+    input,select,button,textarea{font:inherit;border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; padding:8px 10px; border-radius:10px}
+    input::placeholder, textarea::placeholder{color:var(--muted)}
+    button{cursor:pointer}
+    .btn-primary{background:linear-gradient(90deg,var(--accent), #5d3bd3); color:white; border:none}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:18px}
+    .gift-card{display:flex;flex-direction:column;overflow:hidden; border-radius:12px}
+    .gift-image{height:180px;background:#061124;display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid rgba(255,255,255,0.02)}
+    .gift-image img{width:100%;height:100%;object-fit:cover}
+    .gift-body{padding:16px;background:linear-gradient(180deg, rgba(0,0,0,0.15), transparent)}
+    .gift-title{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+    .title{font-weight:600;line-height:1.35;font-size:15px;overflow:visible;display:block;white-space:normal;word-break:break-word}
+    .price{font-weight:700;margin-top:6px;font-size:15px;color:var(--accent);display:block}
+    
+    .tags{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+    .tag{font-size:12px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.03)}
+    .note{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.4}
+    .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .small{padding:8px 10px;font-size:13px;border-radius:10px}
+    .purchased{opacity:0.6;filter:grayscale(0.2);}
+    .toolbar{display:flex;gap:8px;align-items:center;margin-left:auto}
+    .right{margin-left:auto}
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);}
+    .modal-card{width:980px;max-width:96%;max-height:92%;overflow:auto;padding:18px;border-radius:12px}
+    /* modal content override to tornar o modal opaco sobre o overlay */
+    .modal .modal-card.card{background: linear-gradient(180deg, rgba(12,18,30,0.98), rgba(10,14,22,0.99)); box-shadow: 0 12px 40px rgba(2,6,23,0.7); border:1px solid rgba(255,255,255,0.04);}
+    label{display:block;font-size:13px;margin-bottom:6px}
+    .row{display:flex;gap:12px}
+    .col{flex:1}
+    footer{padding:18px 28px;color:var(--muted);font-size:13px}
+    .hint{font-size:13px;color:var(--muted)}
+    .empty{padding:40px;border-radius:12px;text-align:center;color:var(--muted)}
+    /* responsive tweaks */
+    @media (max-width:700px){.row{flex-direction:column}.gift-image{height:130px}}
+  </style>
+</head>
+<body>
+  <header>
+    <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:700">F</div>
+    <h1>Felixo — Organizer de Presentes ✨</h1>
+  </header>
+
+  <main class="container">
+    <div class="topbar card">
+      <div class="controls">
+        <button id="btnAdd" class="btn-primary">+ Novo presente</button>
+        <select id="sortBy" title="Ordenar">
+          <option value="date_desc">Mais recentes</option>
+          <option value="date_asc">Mais antigos</option>
+          <option value="price_asc">Preço: menor → maior</option>
+          <option value="price_desc">Preço: maior → menor</option>
+        </select>
+        <select id="filterPurchased">
+          <option value="all">Todos</option>
+          <option value="not">Não comprados</option>
+          <option value="yes">Comprados</option>
+        </select>
+        <input id="search" placeholder="Pesquisar por nome, tags ou notas" style="min-width:260px" />
+      </div>
+      <div class="toolbar">
+        <button id="btnExport">Exportar JSON</button>
+        <button id="btnImport">Importar JSON</button>
+        <button id="btnClear">Limpar tudo</button>
+      </div>
+    </div>
+
+    <div id="list" class="grid" style="margin-top:18px"></div>
+
+    <div id="empty" class="empty card" style="display:none;margin-top:18px">Nenhum presente ainda — clique em "Novo presente" para começar 🎁</div>
+
+    <footer>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="hint">Salvo localmente no seu navegador (localStorage). Use exportar para backup ou compartilhar.</div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Modal form -->
+  <div id="modal" class="modal" style="display:none">
+    <div class="modal-card card">
+      <h2 id="modalTitle">Novo presente</h2>
+      <form id="giftForm">
+        <div class="row">
+          <div class="col">
+            <label>Título</label>
+            <input id="title" required placeholder="Ex: Relógio vintage" />
+
+            <label style="margin-top:10px">Preço (número)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="price" type="number" step="0.01" placeholder="Ex: 199.90" />
+              <input id="currency" placeholder="R$" style="width:80px" />
+              <select id="priceType"><option value="manual">Valor manual</option></select>
+            </div>
+
+            <label style="margin-top:10px">Link do anúncio</label>
+            <input id="url" placeholder="https://..." />
+
+            <label style="margin-top:10px">Tags (separadas por vírgula)</label>
+            <input id="tags" placeholder="ex: aniversário, tech" />
+
+            <label style="margin-top:10px">Anotações</label>
+            <textarea id="notes" rows="6" placeholder="Observações, ideias de embalagem, tamanho, cor..." style="width:100%"></textarea>
+
+          </div>
+          <div style="width:340px">
+            <label>Imagem (URL ou enviar arquivo)</label>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+              <input id="imgUrl" placeholder="https://... (opcional)" style="flex:1" />
+              <button id="btnFetchImage" type="button" class="small">Usar URL</button>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+              <input id="imgFile" type="file" accept="image/*" />
+            </div>
+            <div style="height:200px;border-radius:10px;overflow:hidden;background:var(--glass);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+              <img id="preview" src="" alt="preview" style="max-width:100%;max-height:100%;display:none">
+              <div id="previewEmpty" style="color:var(--muted);padding:12px">Preview da imagem</div>
+            </div>
+
+            <label>Marcar como comprado?</label>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+              <input id="purchased" type="checkbox" /> <span style="color:var(--muted)">Sim</span>
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <button id="saveBtn" class="btn-primary">Salvar</button>
+              <button id="cancelBtn" type="button">Cancelar</button>
+            </div>
+
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <input id="fileImportInput" type="file" accept="application/json" style="display:none" />
+
+  <script>
+    (()=>{
+      const LS_KEY = 'felixo_gifts_v1';
+      const q = s=>document.querySelector(s);
+      const el = id=>document.getElementById(id);
+
+      // state
+      let gifts = load();
+      let editingId = null;
+
+      const listEl = q('#list');
+      const emptyEl = q('#empty');
+
+      // UI wired
+      el('btnAdd').addEventListener('click', ()=>openModal());
+      el('btnExport').addEventListener('click', exportJSON);
+      el('btnImport').addEventListener('click', ()=>el('fileImportInput').click());
+      el('fileImportInput').addEventListener('change', handleImportFile);
+      el('btnClear').addEventListener('click', clearAll);
+      el('btnFetchImage').addEventListener('click', useImgUrl);
+      el('imgFile').addEventListener('change', handleImgFile);
+      el('cancelBtn').addEventListener('click', closeModal);
+      el('giftForm').addEventListener('submit', saveGift);
+      el('sortBy').addEventListener('change', render);
+      el('filterPurchased').addEventListener('change', render);
+      el('search').addEventListener('input', ()=>render());
+
+      // render initial
+      render();
+
+      // functions
+      function uid(){return 'g_'+Math.random().toString(36).slice(2,9)}
+      function load(){try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch(e){return []}}
+      function saveAll(){localStorage.setItem(LS_KEY, JSON.stringify(gifts))}
+
+      function openModal(gift=null){
+        editingId = gift ? gift.id : null;
+        q('#modalTitle').textContent = gift ? 'Editar presente' : 'Novo presente';
+        el('title').value = gift?.title||'';
+        el('price').value = gift?.price!=null?String(gift.price):'';
+        el('currency').value = gift?.currency||'R$';
+        el('url').value = gift?.url||'';
+        el('tags').value = (gift?.tags||[]).join(', ');
+        el('notes').value = gift?.notes||'';
+        el('imgUrl').value = gift?.imageData && gift.imageIsURL ? gift.imageData : '';
+        el('preview').src = gift?.imageData||'';
+        if(gift?.imageData){ el('preview').style.display='block'; el('previewEmpty').style.display='none'; } else { el('preview').style.display='none'; el('previewEmpty').style.display='block'; }
+        el('purchased').checked = !!gift?.purchased;
+        q('#modal').style.display = 'flex';
+        window.scrollTo(0,0);
+      }
+
+      function closeModal(){
+        q('#modal').style.display='none';
+        el('giftForm').reset();
+        el('preview').src = '';
+        el('preview').style.display='none'; el('previewEmpty').style.display='block';
+        editingId = null;
+      }
+
+      function saveGift(ev){
+        ev.preventDefault();
+        const title = el('title').value.trim();
+        const priceRaw = el('price').value.trim();
+        const price = priceRaw === '' ? null : parseFloat(priceRaw);
+        const currency = el('currency').value.trim()||'R$';
+        const url = el('url').value.trim();
+        const tags = el('tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+        const notes = el('notes').value.trim();
+        const purchased = el('purchased').checked;
+        const imageData = el('preview').src || '';
+
+        if(!title){alert('Preencha o título.'); return}
+
+        if(editingId){
+          const g = gifts.find(x=>x.id===editingId);
+          if(!g) return;
+          g.title = title; g.price = price; g.currency = currency; g.url = url; g.tags = tags; g.notes = notes; g.purchased = purchased; g.imageData = imageData; g.updatedAt = Date.now();
+        } else {
+          const newG = {id:uid(), title, price, currency, url, tags, notes, purchased, imageData, createdAt:Date.now(), updatedAt:Date.now() };
+          gifts.unshift(newG);
+        }
+        saveAll();
+        closeModal();
+        render();
+      }
+
+      function render(){
+        // filter/search/sort
+        const search = el('search').value.trim().toLowerCase();
+        const filter = el('filterPurchased').value;
+        const sortBy = el('sortBy').value;
+
+        let out = gifts.filter(g=>{
+          if(filter==='yes' && !g.purchased) return false;
+          if(filter==='not' && g.purchased) return false;
+          if(!search) return true;
+          const hay = (g.title+' '+(g.tags||[]).join(' ')+' '+(g.notes||'')).toLowerCase();
+          return hay.includes(search) || (g.url||'').toLowerCase().includes(search);
+        });
+
+        if(sortBy==='date_desc') out.sort((a,b)=>b.createdAt - a.createdAt);
+        if(sortBy==='date_asc') out.sort((a,b)=>a.createdAt - b.createdAt);
+        if(sortBy==='price_asc') out.sort((a,b)=> (a.price||Infinity) - (b.price||Infinity) );
+        if(sortBy==='price_desc') out.sort((a,b)=> (b.price||-Infinity) - (a.price||-Infinity) );
+
+        listEl.innerHTML = '';
+        if(out.length===0){ emptyEl.style.display='block'; } else { emptyEl.style.display='none'; }
+
+        out.forEach(g=>{
+          const card = document.createElement('div'); card.className='gift-card card'+(g.purchased? ' purchased':'' );
+          const imgWrap = document.createElement('div'); imgWrap.className='gift-image';
+          if(g.imageData){ const img = document.createElement('img'); img.src = g.imageData; imgWrap.appendChild(img);} else { const p = document.createElement('div'); p.style.color='var(--muted)'; p.textContent='Sem imagem'; imgWrap.appendChild(p);} 
+          const body = document.createElement('div'); body.className='gift-body';
+          const head = document.createElement('div'); head.className='gift-title';
+          const t = document.createElement('div'); t.className='title'; t.textContent = g.title;
+          const pprice = document.createElement('div'); pprice.className='price'; pprice.textContent = g.price!=null ? (g.currency+' '+formatNumber(g.price)) : '—';
+          head.appendChild(t); head.appendChild(pprice);
+
+          const tagsWrap = document.createElement('div'); tagsWrap.className='tags'; (g.tags||[]).slice(0,6).forEach(tag=>{const s=document.createElement('div'); s.className='tag'; s.textContent=tag; tagsWrap.appendChild(s)});
+
+          const note = document.createElement('div'); note.className='note'; note.textContent = g.notes? g.notes: '';
+
+          const actions = document.createElement('div'); actions.className='actions';
+          const btnView = document.createElement('button'); btnView.className='small'; btnView.textContent='Abrir link'; btnView.onclick = ()=>{ if(g.url) window.open(g.url, '_blank'); else alert('Sem link cadastrado.'); };
+          const btnToggle = document.createElement('button'); btnToggle.className='small'; btnToggle.textContent = g.purchased? 'Desmarcar' : 'Marcar comprado'; btnToggle.onclick = ()=>{ g.purchased = !g.purchased; g.updatedAt = Date.now(); saveAll(); render(); };
+          const btnEdit = document.createElement('button'); btnEdit.className='small'; btnEdit.textContent='Editar'; btnEdit.onclick = ()=>openModal(g);
+          const btnDel = document.createElement('button'); btnDel.className='small'; btnDel.textContent='Apagar'; btnDel.onclick = ()=>{ if(confirm('Apagar este presente?')){ gifts = gifts.filter(x=>x.id!==g.id); saveAll(); render(); } };
+          const btnCopy = document.createElement('button'); btnCopy.className='small'; btnCopy.textContent='Copiar link'; btnCopy.onclick = ()=>{ if(!g.url) return alert('Sem link'); navigator.clipboard.writeText(g.url).then(()=>alert('Link copiado')); };
+
+          actions.appendChild(btnView); actions.appendChild(btnToggle); actions.appendChild(btnEdit); actions.appendChild(btnCopy); actions.appendChild(btnDel);
+
+          body.appendChild(head); body.appendChild(tagsWrap); if(g.notes) body.appendChild(note); body.appendChild(actions);
+
+          card.appendChild(imgWrap); card.appendChild(body);
+          listEl.appendChild(card);
+        });
+      }
+
+      function formatNumber(n){ return Number(n).toLocaleString(undefined,{minimumFractionDigits: n%1?2:0, maximumFractionDigits:2}) }
+
+      function useImgUrl(){ const url = el('imgUrl').value.trim(); if(!url) return alert('Cole a URL da imagem'); // attempt to show
+        el('preview').src = url; el('preview').style.display='block'; el('previewEmpty').style.display='none';
+      }
+
+      function handleImgFile(e){ const f = e.target.files && e.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{ el('preview').src = reader.result; el('preview').style.display='block'; el('previewEmpty').style.display='none'; }; reader.readAsDataURL(f); }
+
+      function exportJSON(){ const data = JSON.stringify(gifts, null, 2); const blob = new Blob([data], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'felixo_gifts_export_'+(new Date().toISOString().slice(0,10))+'.json'; a.click(); URL.revokeObjectURL(url); }
+
+      function handleImportFile(e){ const f = e.target.files && e.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{ try{ const imported = JSON.parse(reader.result); if(!Array.isArray(imported)) return alert('Formato inválido'); // merge
+          // basic sanitization: keep only known props
+          const valid = imported.map(it=>({ id: it.id||uid(), title: it.title||'Sem título', price: it.price==null?null:Number(it.price), currency: it.currency||'R$', url: it.url||'', tags: Array.isArray(it.tags)?it.tags: (typeof it.tags==='string'?it.tags.split(',').map(t=>t.trim()):[]), notes: it.notes||'', purchased: !!it.purchased, imageData: it.imageData||'', createdAt: it.createdAt||Date.now(), updatedAt: it.updatedAt||Date.now() }));
+          gifts = valid.concat(gifts); saveAll(); render(); alert('Importação concluída.');
+        }catch(err){ alert('Erro ao importar: ' + err.message) } }
+        reader.readAsText(f);
+      }
+
+      function clearAll(){ if(!confirm('Apagar todos os presentes salvos?')) return; gifts = []; saveAll(); render(); }
+
+      // load sample data if empty (helpful first run)
+      if(gifts.length===0){ gifts = [
+        {id:uid(), title:'Colar minimalista', price:129.9, currency:'R$', url:'', tags:['aniversário','joias'], notes:'Verificar tamanho do pingente. Preferência: prata.', purchased:false, imageData:'', createdAt:Date.now(), updatedAt:Date.now()},
+        {id:uid(), title:'Placa de LED decorativa', price:199.0, currency:'R$', url:'', tags:['decoração','nerd'], notes:'Combina com quarto escuro', purchased:false, imageData:'', createdAt:Date.now(), updatedAt:Date.now()}
+      ]; saveAll(); }
+
+      // initial render again
+      render();
+
+    })();
+  </script>
+</body>
+</html>
