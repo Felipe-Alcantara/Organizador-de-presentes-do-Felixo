@@ -48,8 +48,12 @@
     footer{padding:18px 28px;color:var(--muted);font-size:13px}
     .hint{font-size:13px;color:var(--muted)}
     .empty{padding:40px;border-radius:12px;text-align:center;color:var(--muted)}
+    /* Floating Action Button */
+    .fab{position:fixed;bottom:28px;right:28px;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3b82f6);color:white;border:none;font-size:28px;font-weight:300;box-shadow:0 8px 24px rgba(124,58,237,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;z-index:1000}
+    .fab:hover{transform:scale(1.1);box-shadow:0 12px 32px rgba(124,58,237,0.6)}
+    .fab:active{transform:scale(0.95)}
     /* responsive tweaks */
-    @media (max-width:700px){.row{flex-direction:column}.gift-image{height:130px}}
+    @media (max-width:700px){.row{flex-direction:column}.gift-image{height:130px}.fab{width:56px;height:56px;bottom:20px;right:20px;font-size:24px}}
   </style>
 </head>
 <body>
@@ -152,6 +156,9 @@
 
   <input id="fileImportInput" type="file" accept="application/json" style="display:none" />
 
+  <!-- Floating Action Button -->
+  <button id="fabAdd" class="fab" title="Adicionar novo presente">+</button>
+
   <script>
     (()=>{
       const LS_KEY = 'felixo_gifts_v1';
@@ -167,6 +174,7 @@
 
       // UI wired
       el('btnAdd').addEventListener('click', ()=>openModal());
+      el('fabAdd').addEventListener('click', ()=>openModal());
       el('btnExport').addEventListener('click', exportJSON);
       el('btnImport').addEventListener('click', ()=>el('fileImportInput').click());
       el('fileImportInput').addEventListener('change', handleImportFile);
