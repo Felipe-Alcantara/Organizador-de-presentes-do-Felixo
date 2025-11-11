@@ -117,8 +117,8 @@
             <label style="margin-top:10px">Link do anúncio</label>
             <input id="url" placeholder="https://..." />
 
-            <label style="margin-top:10px">Tags (separadas por vírgula)</label>
-            <input id="tags" placeholder="ex: aniversário, tech" />
+            <label style="margin-top:10px">Tags (cada palavra vira uma tag)</label>
+            <input id="tags" placeholder="ex: presente aniversário tech vermelho" />
 
             <label style="margin-top:10px">Anotações</label>
             <textarea id="notes" rows="6" placeholder="Observações, ideias de embalagem, tamanho, cor..." style="width:100%"></textarea>
@@ -202,7 +202,7 @@
         el('price').value = gift?.price!=null?String(gift.price):'';
         el('currency').value = gift?.currency||'R$';
         el('url').value = gift?.url||'';
-        el('tags').value = (gift?.tags||[]).join(', ');
+        el('tags').value = (gift?.tags||[]).join(' ');
         el('notes').value = gift?.notes||'';
         el('imgUrl').value = gift?.imageData && gift.imageIsURL ? gift.imageData : '';
         el('preview').src = gift?.imageData||'';
@@ -227,7 +227,7 @@
         const price = priceRaw === '' ? null : parseFloat(priceRaw);
         const currency = el('currency').value.trim()||'R$';
         const url = el('url').value.trim();
-        const tags = el('tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+        const tags = el('tags').value.trim().split(/[\s,]+/).map(t=>t.trim()).filter(Boolean);
         const notes = el('notes').value.trim();
         const purchased = el('purchased').checked;
         const imageData = el('preview').src || '';
