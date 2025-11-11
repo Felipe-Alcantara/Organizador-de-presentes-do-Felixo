@@ -30,8 +30,8 @@
     .title{font-weight:600;line-height:1.35;font-size:15px;overflow:visible;display:block;white-space:normal;word-break:break-word}
     .price{font-weight:700;margin-top:6px;font-size:15px;color:var(--accent);display:block}
     
-    .tags{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-    .tag{font-size:12px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.03)}
+    .tags{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;max-height:none}
+    .tag{font-size:11px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);line-height:1.2}
     .note{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.4}
     .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
     .small{padding:8px 10px;font-size:13px;border-radius:10px}
@@ -279,7 +279,7 @@
           const pprice = document.createElement('div'); pprice.className='price'; pprice.textContent = g.price!=null ? (g.currency+' '+formatNumber(g.price)) : '—';
           head.appendChild(t); head.appendChild(pprice);
 
-          const tagsWrap = document.createElement('div'); tagsWrap.className='tags'; (g.tags||[]).slice(0,6).forEach(tag=>{const s=document.createElement('div'); s.className='tag'; s.textContent=tag; tagsWrap.appendChild(s)});
+          const tagsWrap = document.createElement('div'); tagsWrap.className='tags'; (g.tags||[]).forEach(tag=>{const s=document.createElement('div'); s.className='tag'; s.textContent=tag; tagsWrap.appendChild(s)});
 
           const note = document.createElement('div'); note.className='note'; note.textContent = g.notes? g.notes: '';
 
