@@ -9,7 +9,7 @@
 
 **Organize, salve e acompanhe suas ideias de presentes — direto no navegador, sem servidor.**
 
-[🚀 Como Usar](#-como-usar) • [✨ Funcionalidades](#-funcionalidades-disponíveis) • [📁 Estrutura](#-estrutura-do-projeto) • [📝 Licença](#-licença)
+[🌐 Demo Online](https://gifts.felixo.com.br) • [🚀 Como Usar](#-como-usar) • [✨ Funcionalidades](#-funcionalidades-disponíveis) • [📁 Estrutura](#-estrutura-do-projeto) • [📝 Licença](#-licença)
 
 </div>
 
@@ -17,6 +17,7 @@
 
 ## 📋 Índice
 
+- [🌐 **Demo Online**](https://gifts.felixo.com.br) ⭐ **DESTAQUE**
 - [📋 Sobre o Projeto](#-sobre-o-projeto)
 - [📁 Estrutura do Projeto](#-estrutura-do-projeto)
 - [✨ Funcionalidades Disponíveis](#-funcionalidades-disponíveis) ⭐ **DESTAQUE**
@@ -40,13 +41,14 @@ Toda a persistência é feita via **localStorage**, permitindo que você salve e
 ```
 Organizador-de-presentes-do-Felixo/
 │
-├── felixo_gift_organizer_single_file_html.html   # Aplicação completa (HTML + CSS + JS)
+├── index.html                # Aplicação completa (HTML + CSS + JS)
+├── CNAME                     # Domínio customizado (gifts.felixo.com.br)
 │
-├── felixo-standards/                              # Padrões de design do Felixo System
+├── felixo-standards/         # Padrões de design do Felixo System
 │
-├── README.md                                      # Este arquivo
-├── IA.md                                          # Contexto técnico do projeto para IA
-└── LICENSE                                        # Licença MIT
+├── README.md                 # Este arquivo
+├── IA.md                     # Contexto técnico do projeto para IA
+└── LICENSE                   # Licença MIT
 ```
 
 ---
@@ -55,7 +57,7 @@ Organizador-de-presentes-do-Felixo/
 
 ### 🎁 Gestão de Presentes
 
-**`felixo_gift_organizer_single_file_html.html`**
+**`index.html`**
 - Adicionar presentes com título, preço, moeda, link, tags e anotações
 - Associar imagem via URL ou upload de arquivo local
 - Marcar presentes como **comprados** com toggle visual
@@ -84,15 +86,13 @@ Organizador-de-presentes-do-Felixo/
 
 ## 🎯 Como Usar
 
-### Opção 1: Direto no navegador (Recomendado) 🌐
+### Opção 1: Demo online (Recomendado) 🌐
 
-1. Baixe o arquivo `felixo_gift_organizer_single_file_html.html`
-2. Abra-o em qualquer navegador moderno (Chrome, Firefox, Edge, Safari)
-3. Clique em **"+ Novo presente"** ou no botão **+** flutuante para começar
+**🚀 Acesse agora:** [gifts.felixo.com.br](https://gifts.felixo.com.br)
 
-> Nenhuma instalação ou servidor necessário.
+Nenhuma instalação necessária — abre direto no navegador.
 
-### Opção 2: Clonar o repositório
+### Opção 2: Rodar localmente
 
 ```bash
 # Clone o repositório
@@ -102,9 +102,9 @@ git clone https://github.com/Felipe-Alcantara/Organizador-de-presentes-do-Felixo
 cd Organizador-de-presentes-do-Felixo
 
 # Abra o arquivo no navegador
-xdg-open felixo_gift_organizer_single_file_html.html   # Linux
-open felixo_gift_organizer_single_file_html.html        # macOS
-start felixo_gift_organizer_single_file_html.html       # Windows
+xdg-open index.html   # Linux
+open index.html        # macOS
+start index.html       # Windows
 ```
 
 ---

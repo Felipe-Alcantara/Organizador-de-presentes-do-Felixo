@@ -23,6 +23,7 @@ Prioridade: simplicidade e zero dependências de servidor.
 [2026-04-27] ✅ Concluída — Botão flutuante (FAB) responsivo  
 [2026-04-27] ✅ Concluída — Alinhamento ao Felixo Design System (cores + fonte)  
 [2026-04-27] ✅ Concluída — README completo seguindo DESIGN_SYSTEM_PARA_README.md  
+[2026-04-27] ✅ Concluída — Deploy no GitHub Pages com domínio customizado gifts.felixo.com.br  
 
 ---
 
@@ -76,7 +77,8 @@ Prioridade: simplicidade e zero dependências de servidor.
 ## 🔗 INTEGRAÇÕES & SERVIÇOS EXTERNOS
 
 [2026-04-27] Google Fonts — `Space Grotesk` carregada via `<link>` no `<head>`. Sem API key necessária.  
-[2026-04-27] Sem outras integrações externas — aplicação totalmente offline após carregamento da fonte.  
+[2026-04-27] GitHub Pages — deploy automático a partir da branch `main` (raiz `/`). URL pública: https://gifts.felixo.com.br  
+[2026-04-27] Domínio customizado — CNAME `gifts.felixo.com.br` → `felipe-alcantara.github.io`. Arquivo `CNAME` na raiz do repo.  
 
 ---
 
@@ -98,7 +100,8 @@ Prioridade: simplicidade e zero dependências de servidor.
   "updatedAt": 1234567890000
 }
 ```
-[2026-04-27] A propriedade `imageIsURL` foi planejada mas não implementada completamente — `imageData` armazena tanto URLs quanto base64 sem distinção no render.
+[2026-04-27] A propriedade `imageIsURL` foi planejada mas não implementada completamente — `imageData` armazena tanto URLs quanto base64 sem distinção no render.  
+[2026-04-27] O arquivo principal foi renomeado de `felixo_gift_organizer_single_file_html.html` para `index.html` para compatibilidade com GitHub Pages.
 
 ---
 
