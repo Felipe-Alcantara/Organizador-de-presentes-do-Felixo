@@ -4,10 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Felixo — Organizer de Presentes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root{
-      --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#7c3aed; --glass: rgba(255,255,255,0.03);
-      --radius:14px; --gap:16px; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#A855F7; --accent-soft:#C084FC; --glass: rgba(255,255,255,0.03);
+      --radius:14px; --gap:16px; font-family: 'Space Grotesk', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
     *{box-sizing:border-box}
     html,body{height:100%; margin:0; background:linear-gradient(180deg,#071128 0%, #071428 60%); color:#e6eef8}
@@ -20,7 +23,7 @@
     input,select,button,textarea{font:inherit;border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; padding:8px 10px; border-radius:10px}
     input::placeholder, textarea::placeholder{color:var(--muted)}
     button{cursor:pointer}
-    .btn-primary{background:linear-gradient(90deg,var(--accent), #5d3bd3); color:white; border:none}
+    .btn-primary{background:linear-gradient(90deg,var(--accent), var(--accent-soft)); color:white; border:none}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:18px}
     .gift-card{display:flex;flex-direction:column;overflow:hidden; border-radius:12px}
     .gift-image{height:180px;background:#061124;display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid rgba(255,255,255,0.02)}
@@ -49,8 +52,8 @@
     .hint{font-size:13px;color:var(--muted)}
     .empty{padding:40px;border-radius:12px;text-align:center;color:var(--muted)}
     /* Floating Action Button */
-    .fab{position:fixed;bottom:28px;right:28px;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3b82f6);color:white;border:none;font-size:28px;font-weight:300;box-shadow:0 8px 24px rgba(124,58,237,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;z-index:1000}
-    .fab:hover{transform:scale(1.1);box-shadow:0 12px 32px rgba(124,58,237,0.6)}
+    .fab{position:fixed;bottom:28px;right:28px;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-soft));color:white;border:none;font-size:28px;font-weight:300;box-shadow:0 8px 24px rgba(168,85,247,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;z-index:1000}
+    .fab:hover{transform:scale(1.1);box-shadow:0 12px 32px rgba(168,85,247,0.6)}
     .fab:active{transform:scale(0.95)}
     /* responsive tweaks */
     @media (max-width:700px){.row{flex-direction:column}.gift-image{height:130px}.fab{width:56px;height:56px;bottom:20px;right:20px;font-size:24px}}
@@ -58,7 +61,7 @@
 </head>
 <body>
   <header>
-    <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3b82f6);display:flex;align-items:center;justify-content:center;font-weight:700">F</div>
+    <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-soft));display:flex;align-items:center;justify-content:center;font-weight:700">F</div>
     <h1>Felixo — Organizer de Presentes ✨</h1>
   </header>
 
