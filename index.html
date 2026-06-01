@@ -156,11 +156,26 @@
       grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
       gap:20px;margin-top:20px;
     }
+    /* grade fixa: nº de colunas escolhido pelo usuário (data-cols="2..5") */
+    .grid[data-cols="2"]{grid-template-columns:repeat(2,1fr)}
+    .grid[data-cols="3"]{grid-template-columns:repeat(3,1fr)}
+    .grid[data-cols="4"]{grid-template-columns:repeat(4,1fr)}
+    .grid[data-cols="5"]{grid-template-columns:repeat(5,1fr)}
+    /* em telas estreitas, grade fixa cede para não espremer os cards */
+    @media (max-width:900px){
+      .grid[data-cols="3"],.grid[data-cols="4"],.grid[data-cols="5"]{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width:560px){
+      .grid[data-cols]{grid-template-columns:1fr}
+    }
     .gift-card{
       display:flex;flex-direction:column;overflow:hidden;
       border-radius:var(--radius-lg);
-      transition:border-color .25s, transform .2s;
+      transition:border-color .25s, transform .2s, opacity .25s, filter .25s;
     }
+    /* comprados: mais apagados e dessaturados para destacar visualmente */
+    .gift-card.purchased{opacity:0.55;filter:grayscale(0.35)}
+    .gift-card.purchased:hover{opacity:0.85;filter:grayscale(0.1)}
     .gift-card:hover{border-color:var(--border-hover);transform:translateY(-2px)}
     .gift-card:hover{animation:card-glow-breathe 3s ease-in-out infinite}
     @keyframes card-glow-breathe{
@@ -289,6 +304,15 @@
               <option value="yes">Comprados</option>
             </select>
 
+            <label for="gridCols" class="sr-only">Cards por linha</label>
+            <select id="gridCols" title="Cards por linha">
+              <option value="auto">Grade: automática</option>
+              <option value="2">Grade: 2 por linha</option>
+              <option value="3">Grade: 3 por linha</option>
+              <option value="4">Grade: 4 por linha</option>
+              <option value="5">Grade: 5 por linha</option>
+            </select>
+
             <label for="search" class="sr-only">Pesquisar presentes</label>
             <input id="search" type="search" placeholder="Pesquisar por nome, tags ou notas" style="min-width:260px" />
           </div>
@@ -392,6 +416,7 @@
     (()=>{
       'use strict';
       const LS_KEY = 'felixo_gifts_v1';
+      const PREFS_KEY = 'felixo_gifts_prefs_v1';
       const q  = s  => document.querySelector(s);
       const el = id => document.getElementById(id);
 
@@ -463,12 +488,15 @@
       el('sortBy').addEventListener('change', render);
       el('filterPurchased').addEventListener('change', render);
       el('search').addEventListener('input', render);
+      el('gridCols').addEventListener('change', ()=>{ savePrefs(); applyGridCols(); });
 
       // fecha o modal com Esc ou clique no overlay
       document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modalEl.style.display==='flex') closeModal(); });
       modalEl.addEventListener('mousedown', e=>{ if(e.target===modalEl) closeModal(); });
 
       spawnParticles();
+      loadPrefs();
+      applyGridCols();
       render();
 
       // ============================================================
@@ -477,6 +505,23 @@
       function uid(){ return 'g_'+Math.random().toString(36).slice(2,9); }
       function load(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(_){ return []; } }
       function saveAll(){ localStorage.setItem(LS_KEY, JSON.stringify(gifts)); }
+
+      // preferências de visualização (separadas dos dados dos presentes)
+      function loadPrefs(){
+        try{
+          const prefs = JSON.parse(localStorage.getItem(PREFS_KEY)) || {};
+          if(prefs.gridCols) el('gridCols').value = prefs.gridCols;
+        }catch(_){ /* ignora prefs corrompidas */ }
+      }
+      function savePrefs(){
+        localStorage.setItem(PREFS_KEY, JSON.stringify({ gridCols: el('gridCols').value }));
+      }
+      // aplica o nº de colunas escolhido; 'auto' remove o override (volta ao auto-fill responsivo)
+      function applyGridCols(){
+        const cols = el('gridCols').value;
+        if(cols === 'auto') listEl.removeAttribute('data-cols');
+        else listEl.setAttribute('data-cols', cols);
+      }
 
       // ============================================================
       // Modal
