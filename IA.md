@@ -65,6 +65,8 @@ Prioridade: simplicidade e zero dependências de servidor.
 [2026-06-01] Seletor de grade (`#gridCols`): Auto / 2 / 3 / 4 / 5 colunas por linha via atributo `data-cols` no `.grid` (CSS `grid-template-columns:repeat(N,1fr)`). 'auto' remove o override e volta ao `auto-fill minmax(260px,1fr)`. Em ≤900px grade fixa cai para 2 colunas; em ≤560px vira 1 coluna.  
 [2026-06-01] Preferência de grade persistida em chave própria `felixo_gifts_prefs_v1` (separada dos dados em `felixo_gifts_v1`) via `loadPrefs`/`savePrefs`.  
 [2026-06-01] Presentes comprados: `.gift-card.purchased` com `opacity:0.55` + `grayscale(0.35)` (no hover sobe para `0.85`/`0.1`) — destaque visual de "já comprado" que se perdera no redesign.  
+[2026-06-01] Container alargado de `max-width:1280px` para `1600px` e grade 'auto' com `minmax(230px,1fr)` (era 260px) — preenche melhor telas largas.  
+[2026-06-01] Título e nota dos cards limitados com `-webkit-line-clamp` (título 2 linhas, nota 3 linhas) + `title` (tooltip) com o texto completo — cards ficam com altura uniforme em vez de esticar com textos longos.  
 
 ---
 
