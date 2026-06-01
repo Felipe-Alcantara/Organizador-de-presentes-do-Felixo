@@ -161,9 +161,16 @@
     .grid[data-cols="3"]{grid-template-columns:repeat(3,1fr)}
     .grid[data-cols="4"]{grid-template-columns:repeat(4,1fr)}
     .grid[data-cols="5"]{grid-template-columns:repeat(5,1fr)}
+    .grid[data-cols="6"]{grid-template-columns:repeat(6,1fr)}
+    .grid[data-cols="7"]{grid-template-columns:repeat(7,1fr)}
+    .grid[data-cols="8"]{grid-template-columns:repeat(8,1fr)}
     /* em telas estreitas, grade fixa cede para não espremer os cards */
+    @media (max-width:1200px){
+      .grid[data-cols="6"],.grid[data-cols="7"],.grid[data-cols="8"]{grid-template-columns:repeat(4,1fr)}
+    }
     @media (max-width:900px){
-      .grid[data-cols="3"],.grid[data-cols="4"],.grid[data-cols="5"]{grid-template-columns:repeat(2,1fr)}
+      .grid[data-cols="3"],.grid[data-cols="4"],.grid[data-cols="5"],
+      .grid[data-cols="6"],.grid[data-cols="7"],.grid[data-cols="8"]{grid-template-columns:repeat(2,1fr)}
     }
     @media (max-width:560px){
       .grid[data-cols]{grid-template-columns:1fr}
@@ -319,6 +326,9 @@
               <option value="3">Grade: 3 por linha</option>
               <option value="4">Grade: 4 por linha</option>
               <option value="5">Grade: 5 por linha</option>
+              <option value="6">Grade: 6 por linha</option>
+              <option value="7">Grade: 7 por linha</option>
+              <option value="8">Grade: 8 por linha</option>
             </select>
 
             <label for="search" class="sr-only">Pesquisar presentes</label>
