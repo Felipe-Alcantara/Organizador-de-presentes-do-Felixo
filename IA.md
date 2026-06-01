@@ -24,6 +24,9 @@ Prioridade: simplicidade e zero dependências de servidor.
 [2026-04-27] ✅ Concluída — Alinhamento ao Felixo Design System (cores + fonte)  
 [2026-04-27] ✅ Concluída — README completo seguindo DESIGN_SYSTEM_PARA_README.md  
 [2026-04-27] ✅ Concluída — Deploy no GitHub Pages com domínio customizado gifts.felixo.com.br  
+[2026-06-01] ✅ Concluída — Redesign do `index.html` aplicando o Felixo Frontend Design System (paleta zinc/black, glow respirante, partículas roxas, cards do design system)  
+[2026-06-01] ✅ Concluída — Acessibilidade: modal com `role="dialog"`/`aria-modal`, fechar com Esc/overlay, restauração de foco, `aria-label` no FAB, labels `sr-only` nos controles  
+[2026-06-01] ✅ Concluída — Validação de URL contra XSS (bloqueio de `javascript:`/`data:` em links) e correção do contrato `imageIsURL`  
 
 ---
 
@@ -55,6 +58,10 @@ Prioridade: simplicidade e zero dependências de servidor.
 [2026-04-27] Sombra do FAB em hover: `rgba(168,85,247,0.6)` — RGB de `#A855F7`.  
 [2026-04-27] Tags: `border-radius: 999px` (pill), fundo sutil `rgba(255,255,255,0.04)`.  
 [2026-04-27] Cards com `border-radius: 12-14px`, sombra escura `rgba(2,6,23,0.6)`.  
+[2026-06-01] Redesign alinhado ao `felixo-standards/core/DESIGN_SYSTEM_FRONTEND.md`: fundo `linear-gradient(black → zinc-950 → black)` fixo, cards `bg-zinc-950/50` com `border rgba(255,255,255,0.10)` e `border-radius` 1.5rem (rounded-3xl), inputs `rounded-xl` com focus glow roxo (`box-shadow 2px/4px rgba(168,85,247,...)`).  
+[2026-06-01] Glow respirante (`card-glow-breathe` 3s ease-in-out) ativado no hover dos cards; título "Felixo" usa `text-felixo-purple-glow` (animação `text-glow-breathe`).  
+[2026-06-01] Partículas de fundo: 35 partículas roxas (`#e9d5ff`, glow `rgba(192,132,252,0.8)`) flutuando para cima — geradas em JS, respeitando `prefers-reduced-motion`.  
+[2026-06-01] Tags repaginadas para o roxo Felixo (`rgba(168,85,247,0.10)` fundo, `#C084FC` texto). Badge de status "✓ Comprado" em verde (`rgba(34,197,94,...)`) seguindo as cores de status do design system.  
 
 ---
 
@@ -70,7 +77,11 @@ Prioridade: simplicidade e zero dependências de servidor.
 
 ## 🐛 BUGS & FIXES RELEVANTES
 
-[2026-04-27] Tags inicialmente limitadas a palavras únicas — corrigido para aceitar múltiplas palavras separadas por espaço ou vírgula, usando split `/[\s,]+/`.
+[2026-04-27] Tags inicialmente limitadas a palavras únicas — corrigido para aceitar múltiplas palavras separadas por espaço ou vírgula, usando split `/[\s,]+/`.  
+[2026-06-01] SEGURANÇA: links de presente e URLs de imagem eram passados sem validação para `window.open`/`<img>`/`navigator.clipboard`, permitindo esquemas como `javascript:`/`data:` (vetor de XSS).  
+CAUSA: ausência de saneamento de URL externa antes do uso.  
+FIX: funções `safeUrl()` (só http/https via construtor `URL`) e `safeImageUrl()` (http/https ou `data:image/`) aplicadas em salvar, importar, render, abrir e copiar link.  
+[2026-06-01] Removido o `<select id="priceType">` com única opção "manual" (código morto sem efeito) e o handler dele.
 
 ---
 
@@ -101,6 +112,7 @@ Prioridade: simplicidade e zero dependências de servidor.
 }
 ```
 [2026-04-27] A propriedade `imageIsURL` foi planejada mas não implementada completamente — `imageData` armazena tanto URLs quanto base64 sem distinção no render.  
+[2026-06-01] ✅ Resolvido — `imageIsURL` agora é gravada em `saveGift`/import: `true` quando `imageData` é http(s), `false` quando é `data:image/...`. O render usa `safeImageUrl()` para distinguir e validar a origem.  
 [2026-04-27] O arquivo principal foi renomeado de `felixo_gift_organizer_single_file_html.html` para `index.html` para compatibilidade com GitHub Pages.
 
 ---

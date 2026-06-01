@@ -3,179 +3,453 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Felixo — Organizer de Presentes</title>
+  <meta name="description" content="Organize, salve e acompanhe suas ideias de presentes — direto no navegador, sem servidor." />
+  <meta name="theme-color" content="#09090b" />
+  <title>Organizador de Presentes do Felixo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
+    /* ============================================================
+       Felixo System Design — paleta e tokens
+       Roxo de marca: #C084FC (estático) / #A855F7 (vibrante, glow)
+       Fundo: gradiente black → zinc-950 → black
+       Fonte: Space Grotesk
+       ============================================================ */
     :root{
-      --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#A855F7; --accent-soft:#C084FC; --glass: rgba(255,255,255,0.03);
-      --radius:14px; --gap:16px; font-family: 'Space Grotesk', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --felixo-purple:#C084FC;
+      --felixo-purple-bright:#A855F7;
+      --bg-base:#000000;
+      --bg-zinc-950:rgb(9,9,11);
+      --bg-zinc-900:rgb(24,24,27);
+      --bg-zinc-800:rgb(39,39,42);
+      --text-50:rgb(250,250,250);
+      --text-300:rgb(212,212,216);
+      --text-400:rgb(161,161,170);
+      --border:rgba(255,255,255,0.10);
+      --border-subtle:rgba(255,255,255,0.05);
+      --border-hover:rgba(255,255,255,0.20);
+      --radius:1rem;        /* rounded-2xl */
+      --radius-lg:1.5rem;   /* rounded-3xl */
+      --radius-input:0.75rem;
+      --felixo-glow-intensity:1;
+      font-family:'Space Grotesk', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
+
     *{box-sizing:border-box}
-    html,body{height:100%; margin:0; background:linear-gradient(180deg,#071128 0%, #071428 60%); color:#e6eef8}
-    header{display:flex;align-items:center;gap:16px;padding:20px 28px}
-    header h1{margin:0;font-size:20px;letter-spacing:0.2px}
-    .container{padding:20px 28px}
-    .topbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02)); border-radius:var(--radius); padding:14px; box-shadow: 0 6px 18px rgba(2,6,23,0.6);}
-    .controls{display:flex;gap:8px;align-items:center}
-    input,select,button,textarea{font:inherit;border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; padding:8px 10px; border-radius:10px}
-    input::placeholder, textarea::placeholder{color:var(--muted)}
-    button{cursor:pointer}
-    .btn-primary{background:linear-gradient(90deg,var(--accent), var(--accent-soft)); color:white; border:none}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin-top:18px}
-    .gift-card{display:flex;flex-direction:column;overflow:hidden; border-radius:12px}
-    .gift-image{height:180px;background:#061124;display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid rgba(255,255,255,0.02)}
+
+    html,body{height:100%; margin:0;}
+    body{
+      background:linear-gradient(to bottom, var(--bg-base) 0%, var(--bg-zinc-950) 50%, var(--bg-base) 100%);
+      background-attachment:fixed;
+      color:var(--text-50);
+      min-height:100vh;
+      line-height:1.5;
+    }
+    ::selection{background:rgba(147,51,234,0.40)}
+
+    /* ---- Scrollbar customizada ---- */
+    ::-webkit-scrollbar{width:8px;height:8px}
+    ::-webkit-scrollbar-thumb{background:rgba(74,74,74,0.8);border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:rgba(106,106,106,0.9)}
+
+    /* ============================================================
+       Partículas de fundo (Felixo BackgroundParticles)
+       ============================================================ */
+    #particles{
+      position:fixed; inset:0; z-index:0;
+      pointer-events:none; user-select:none; overflow:hidden;
+    }
+    .particle{
+      position:absolute; border-radius:9999px;
+      background:#e9d5ff;
+      box-shadow:0 0 15px rgba(192,132,252,0.8);
+      filter:blur(0.5px);
+      animation:particle-float linear infinite;
+      opacity:0;
+    }
+    @keyframes particle-float{
+      0%{transform:translateY(0);opacity:0}
+      10%{opacity:var(--p-opacity)}
+      90%{opacity:var(--p-opacity)}
+      100%{transform:translateY(-150px);opacity:0}
+    }
+    @media (prefers-reduced-motion: reduce){
+      .particle{animation:none;display:none}
+      .felixo-card-glow{animation:none}
+    }
+
+    /* ---- Layout base ---- */
+    .layer{position:relative; z-index:10}
+    .container{max-width:1280px; margin:0 auto; padding:0 24px}
+
+    header{display:flex;align-items:center;gap:16px;padding:28px 0 20px}
+    .logo{
+      width:46px;height:46px;border-radius:0.75rem;
+      background:linear-gradient(135deg, var(--felixo-purple-bright), var(--felixo-purple));
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;font-size:20px;color:#fff;
+      box-shadow:0 0 20px rgba(168,85,247,0.45);
+    }
+    header h1{margin:0;font-size:22px;font-weight:700;letter-spacing:0.2px}
+    .text-felixo-purple-glow{
+      color:var(--felixo-purple-bright);
+      text-shadow:0 0 8px rgba(168,85,247,0.55), 0 0 44px rgba(168,85,247,0.32);
+      animation:text-glow-breathe 3.8s ease-in-out infinite;
+    }
+    @keyframes text-glow-breathe{
+      0%,100%{text-shadow:0 0 8px rgba(168,85,247,0.45), 0 0 30px rgba(168,85,247,0.22)}
+      50%{text-shadow:0 0 12px rgba(168,85,247,0.65), 0 0 48px rgba(168,85,247,0.38)}
+    }
+
+    /* ---- Card base (design system) ---- */
+    .card{
+      background:rgba(9,9,11,0.50);
+      border:1px solid var(--border);
+      border-radius:var(--radius-lg);
+      box-shadow:0 6px 18px rgba(2,6,23,0.6);
+    }
+
+    /* ---- Topbar / controles ---- */
+    .topbar{
+      display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+      padding:16px 20px;margin-top:8px;
+    }
+    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .toolbar{display:flex;gap:10px;align-items:center;margin-left:auto;flex-wrap:wrap}
+
+    input,select,button,textarea{font:inherit;color:inherit}
+    input,select,textarea{
+      background:rgba(39,39,42,0.5);
+      border:1px solid var(--border);
+      border-radius:var(--radius-input);
+      padding:8px 12px;
+      outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    input::placeholder,textarea::placeholder{color:var(--text-400)}
+    input:focus,select:focus,textarea:focus{
+      border-color:rgba(168,85,247,0.6);
+      box-shadow:0 0 0 2px rgba(168,85,247,0.4), 0 0 0 4px rgba(168,85,247,0.2);
+    }
+    select{cursor:pointer}
+
+    button{cursor:pointer;border:1px solid var(--border);background:rgba(39,39,42,0.6);
+      border-radius:var(--radius);padding:8px 16px;transition:background .2s, border-color .2s, transform .1s}
+    button:hover{background:rgba(63,63,70,0.7);border-color:var(--border-hover)}
+    button:active{transform:translateY(1px)}
+    button:focus-visible{outline:2px solid var(--felixo-purple-bright);outline-offset:2px}
+    .btn-primary{
+      background:linear-gradient(135deg,var(--felixo-purple-bright), var(--felixo-purple));
+      color:#fff;border:none;font-weight:600;
+      box-shadow:0 4px 14px rgba(168,85,247,0.35);
+    }
+    .btn-primary:hover{
+      background:linear-gradient(135deg,var(--felixo-purple-bright), var(--felixo-purple));
+      filter:brightness(1.08);box-shadow:0 6px 20px rgba(168,85,247,0.5)
+    }
+    .small{padding:7px 12px;font-size:13px;border-radius:0.75rem}
+
+    /* ---- Grid de cards ---- */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+      gap:20px;margin-top:20px;
+    }
+    .gift-card{
+      display:flex;flex-direction:column;overflow:hidden;
+      border-radius:var(--radius-lg);
+      transition:border-color .25s, transform .2s;
+    }
+    .gift-card:hover{border-color:var(--border-hover);transform:translateY(-2px)}
+    .gift-card:hover{animation:card-glow-breathe 3s ease-in-out infinite}
+    @keyframes card-glow-breathe{
+      0%,100%{box-shadow:0 0 15px rgba(168,85,247,0.15)}
+      50%{box-shadow:0 0 40px rgba(168,85,247,0.45)}
+    }
+    .gift-image{
+      height:180px;background:var(--bg-zinc-900);
+      display:flex;align-items:center;justify-content:center;overflow:hidden;
+      border-bottom:1px solid var(--border-subtle);color:var(--text-400);font-size:13px;
+    }
     .gift-image img{width:100%;height:100%;object-fit:cover}
-    .gift-body{padding:16px;background:linear-gradient(180deg, rgba(0,0,0,0.15), transparent)}
-    .gift-title{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
-    .title{font-weight:600;line-height:1.35;font-size:15px;overflow:visible;display:block;white-space:normal;word-break:break-word}
-    .price{font-weight:700;margin-top:6px;font-size:15px;color:var(--accent);display:block}
-    
-    .tags{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;max-height:none}
-    .tag{font-size:11px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);line-height:1.2}
-    .note{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.4}
-    .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-    .small{padding:8px 10px;font-size:13px;border-radius:10px}
-    .purchased{opacity:0.6;filter:grayscale(0.2);}
-    .toolbar{display:flex;gap:8px;align-items:center;margin-left:auto}
-    .right{margin-left:auto}
-    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);}
-    .modal-card{width:980px;max-width:96%;max-height:92%;overflow:auto;padding:18px;border-radius:12px}
-    /* modal content override to tornar o modal opaco sobre o overlay */
-    .modal .modal-card.card{background: linear-gradient(180deg, rgba(12,18,30,0.98), rgba(10,14,22,0.99)); box-shadow: 0 12px 40px rgba(2,6,23,0.7); border:1px solid rgba(255,255,255,0.04);}
-    label{display:block;font-size:13px;margin-bottom:6px}
-    .row{display:flex;gap:12px}
-    .col{flex:1}
-    footer{padding:18px 28px;color:var(--muted);font-size:13px}
-    .hint{font-size:13px;color:var(--muted)}
-    .empty{padding:40px;border-radius:12px;text-align:center;color:var(--muted)}
-    /* Floating Action Button */
-    .fab{position:fixed;bottom:28px;right:28px;width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-soft));color:white;border:none;font-size:28px;font-weight:300;box-shadow:0 8px 24px rgba(168,85,247,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;z-index:1000}
+    .gift-body{padding:18px;display:flex;flex-direction:column}
+    .gift-title{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+    .title{font-weight:600;line-height:1.35;font-size:16px;word-break:break-word}
+    .price{font-weight:700;font-size:15px;color:var(--felixo-purple)}
+    .badge-status{
+      align-self:flex-start;margin-top:8px;
+      display:inline-flex;align-items:center;gap:6px;
+      font-size:11px;font-weight:600;padding:3px 10px;border-radius:9999px;
+      background:rgba(34,197,94,0.12);color:#86efac;border:1px solid rgba(34,197,94,0.4);
+    }
+    .tags{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+    .tag{
+      font-size:11px;font-weight:500;padding:4px 10px;border-radius:9999px;
+      background:rgba(168,85,247,0.10);color:var(--felixo-purple);
+      border:1px solid rgba(168,85,247,0.20);line-height:1.2;
+    }
+    .note{margin-top:12px;color:var(--text-400);font-size:13px;line-height:1.5;white-space:pre-wrap}
+    .actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+
+    .empty{padding:48px 24px;text-align:center;color:var(--text-400);margin-top:20px}
+
+    footer{padding:24px 0;color:var(--text-400);font-size:13px}
+
+    /* ============================================================
+       Modal acessível (role=dialog)
+       ============================================================ */
+    .modal{
+      position:fixed;inset:0;z-index:50;
+      display:flex;align-items:center;justify-content:center;
+      background:rgba(0,0,0,0.80);backdrop-filter:blur(4px);
+      padding:20px;
+    }
+    .modal-card{
+      width:980px;max-width:100%;max-height:92vh;overflow:auto;padding:24px;
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(24,24,27,0.98), rgba(9,9,11,0.99));
+      border:1px solid rgba(168,85,247,0.30);
+      box-shadow:0 12px 40px rgba(2,6,23,0.7), 0 0 30px rgba(168,85,247,0.20);
+    }
+    .modal-card h2{margin:0 0 16px;font-size:20px;font-weight:700}
+    label{display:block;font-size:13px;color:var(--text-300);margin-bottom:6px}
+    .field{margin-top:14px}
+    .row{display:flex;gap:16px}
+    .col{flex:1;min-width:0}
+    .side{width:340px;max-width:100%}
+    .preview-box{
+      height:200px;border-radius:var(--radius-input);overflow:hidden;
+      background:var(--bg-zinc-900);display:flex;align-items:center;justify-content:center;
+      margin-bottom:8px;color:var(--text-400);
+    }
+    .preview-box img{max-width:100%;max-height:100%;display:none}
+    .check-row{display:flex;gap:8px;align-items:center;margin-top:6px;color:var(--text-400)}
+    .modal-actions{margin-top:18px;display:flex;gap:8px}
+
+    /* ============================================================
+       FAB (Floating Action Button)
+       ============================================================ */
+    .fab{
+      position:fixed;bottom:28px;right:28px;width:64px;height:64px;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--felixo-purple-bright),var(--felixo-purple));
+      color:#fff;border:none;font-size:30px;font-weight:300;line-height:1;
+      box-shadow:0 8px 24px rgba(168,85,247,0.4);
+      display:flex;align-items:center;justify-content:center;
+      transition:transform .2s ease, box-shadow .2s ease;z-index:40;
+    }
     .fab:hover{transform:scale(1.1);box-shadow:0 12px 32px rgba(168,85,247,0.6)}
     .fab:active{transform:scale(0.95)}
-    /* responsive tweaks */
-    @media (max-width:700px){.row{flex-direction:column}.gift-image{height:130px}.fab{width:56px;height:56px;bottom:20px;right:20px;font-size:24px}}
+
+    /* visually hidden mas acessível a leitores de tela */
+    .sr-only{
+      position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;
+    }
+
+    /* ---- responsivo ---- */
+    @media (max-width:720px){
+      .row{flex-direction:column}
+      .side{width:100%}
+      .gift-image{height:150px}
+      .fab{width:56px;height:56px;bottom:20px;right:20px;font-size:26px}
+      .toolbar{margin-left:0}
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent-soft));display:flex;align-items:center;justify-content:center;font-weight:700">F</div>
-    <h1>Felixo — Organizer de Presentes ✨</h1>
-  </header>
+  <!-- Camada de fundo: partículas roxas flutuantes -->
+  <div id="particles" aria-hidden="true"></div>
 
-  <main class="container">
-    <div class="topbar card">
-      <div class="controls">
-        <button id="btnAdd" class="btn-primary">+ Novo presente</button>
-        <select id="sortBy" title="Ordenar">
-          <option value="date_desc">Mais recentes</option>
-          <option value="date_asc">Mais antigos</option>
-          <option value="price_asc">Preço: menor → maior</option>
-          <option value="price_desc">Preço: maior → menor</option>
-        </select>
-        <select id="filterPurchased">
-          <option value="all">Todos</option>
-          <option value="not">Não comprados</option>
-          <option value="yes">Comprados</option>
-        </select>
-        <input id="search" placeholder="Pesquisar por nome, tags ou notas" style="min-width:260px" />
-      </div>
-      <div class="toolbar">
-        <button id="btnExport">Exportar JSON</button>
-        <button id="btnImport">Importar JSON</button>
-        <button id="btnClear">Limpar tudo</button>
-      </div>
+  <div class="layer">
+    <div class="container">
+      <header>
+        <div class="logo" aria-hidden="true">F</div>
+        <h1>Organizador de Presentes do <span class="text-felixo-purple-glow">Felixo</span> ✨</h1>
+      </header>
+
+      <main>
+        <div class="topbar card" role="search">
+          <div class="controls">
+            <button id="btnAdd" class="btn-primary">+ Novo presente</button>
+
+            <label for="sortBy" class="sr-only">Ordenar presentes</label>
+            <select id="sortBy" title="Ordenar">
+              <option value="date_desc">Mais recentes</option>
+              <option value="date_asc">Mais antigos</option>
+              <option value="price_asc">Preço: menor → maior</option>
+              <option value="price_desc">Preço: maior → menor</option>
+            </select>
+
+            <label for="filterPurchased" class="sr-only">Filtrar por status</label>
+            <select id="filterPurchased" title="Filtrar por status">
+              <option value="all">Todos</option>
+              <option value="not">Não comprados</option>
+              <option value="yes">Comprados</option>
+            </select>
+
+            <label for="search" class="sr-only">Pesquisar presentes</label>
+            <input id="search" type="search" placeholder="Pesquisar por nome, tags ou notas" style="min-width:260px" />
+          </div>
+          <div class="toolbar">
+            <button id="btnExport">Exportar JSON</button>
+            <button id="btnImport">Importar JSON</button>
+            <button id="btnClear">Limpar tudo</button>
+          </div>
+        </div>
+
+        <div id="list" class="grid" aria-live="polite"></div>
+
+        <div id="empty" class="empty card" style="display:none">
+          Nenhum presente ainda — clique em "Novo presente" para começar 🎁
+        </div>
+
+        <footer>
+          <div class="hint">Salvo localmente no seu navegador (localStorage). Use exportar para backup ou compartilhar.</div>
+        </footer>
+      </main>
     </div>
+  </div>
 
-    <div id="list" class="grid" style="margin-top:18px"></div>
-
-    <div id="empty" class="empty card" style="display:none;margin-top:18px">Nenhum presente ainda — clique em "Novo presente" para começar 🎁</div>
-
-    <footer>
-      <div style="display:flex;gap:12px;align-items:center">
-        <div class="hint">Salvo localmente no seu navegador (localStorage). Use exportar para backup ou compartilhar.</div>
-      </div>
-    </footer>
-  </main>
-
-  <!-- Modal form -->
-  <div id="modal" class="modal" style="display:none">
-    <div class="modal-card card">
+  <!-- Modal de cadastro / edição -->
+  <div id="modal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
       <h2 id="modalTitle">Novo presente</h2>
       <form id="giftForm">
         <div class="row">
           <div class="col">
-            <label>Título</label>
-            <input id="title" required placeholder="Ex: Relógio vintage" />
-
-            <label style="margin-top:10px">Preço (número)</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input id="price" type="number" step="0.01" placeholder="Ex: 199.90" />
-              <input id="currency" placeholder="R$" style="width:80px" />
-              <select id="priceType"><option value="manual">Valor manual</option></select>
+            <div class="field">
+              <label for="title">Título</label>
+              <input id="title" required placeholder="Ex: Relógio vintage" style="width:100%" />
             </div>
 
-            <label style="margin-top:10px">Link do anúncio</label>
-            <input id="url" placeholder="https://..." />
+            <div class="field">
+              <label for="price">Preço (número)</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input id="price" type="number" step="0.01" min="0" placeholder="Ex: 199.90" style="flex:1" />
+                <label for="currency" class="sr-only">Moeda</label>
+                <input id="currency" placeholder="R$" style="width:80px" />
+              </div>
+            </div>
 
-            <label style="margin-top:10px">Tags (cada palavra vira uma tag)</label>
-            <input id="tags" placeholder="ex: presente aniversário tech vermelho" />
+            <div class="field">
+              <label for="url">Link do anúncio</label>
+              <input id="url" type="url" inputmode="url" placeholder="https://..." style="width:100%" />
+            </div>
 
-            <label style="margin-top:10px">Anotações</label>
-            <textarea id="notes" rows="6" placeholder="Observações, ideias de embalagem, tamanho, cor..." style="width:100%"></textarea>
+            <div class="field">
+              <label for="tags">Tags (cada palavra vira uma tag)</label>
+              <input id="tags" placeholder="ex: presente aniversário tech vermelho" style="width:100%" />
+            </div>
 
+            <div class="field">
+              <label for="notes">Anotações</label>
+              <textarea id="notes" rows="6" placeholder="Observações, ideias de embalagem, tamanho, cor..." style="width:100%"></textarea>
+            </div>
           </div>
-          <div style="width:340px">
-            <label>Imagem (URL ou enviar arquivo)</label>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-              <input id="imgUrl" placeholder="https://... (opcional)" style="flex:1" />
-              <button id="btnFetchImage" type="button" class="small">Usar URL</button>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-              <input id="imgFile" type="file" accept="image/*" />
-            </div>
-            <div style="height:200px;border-radius:10px;overflow:hidden;background:var(--glass);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
-              <img id="preview" src="" alt="preview" style="max-width:100%;max-height:100%;display:none">
-              <div id="previewEmpty" style="color:var(--muted);padding:12px">Preview da imagem</div>
+
+          <div class="side">
+            <div class="field">
+              <label for="imgUrl">Imagem (URL ou enviar arquivo)</label>
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                <input id="imgUrl" type="url" placeholder="https://... (opcional)" style="flex:1" />
+                <button id="btnFetchImage" type="button" class="small">Usar URL</button>
+              </div>
+              <div style="margin-bottom:8px">
+                <label for="imgFile" class="sr-only">Enviar arquivo de imagem</label>
+                <input id="imgFile" type="file" accept="image/*" />
+              </div>
+              <div class="preview-box">
+                <img id="preview" src="" alt="Pré-visualização da imagem do presente" />
+                <span id="previewEmpty">Preview da imagem</span>
+              </div>
             </div>
 
-            <label>Marcar como comprado?</label>
-            <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-              <input id="purchased" type="checkbox" /> <span style="color:var(--muted)">Sim</span>
+            <div class="field">
+              <label for="purchased">Marcar como comprado?</label>
+              <div class="check-row">
+                <input id="purchased" type="checkbox" /> <span>Sim</span>
+              </div>
             </div>
 
-            <div style="margin-top:12px;display:flex;gap:8px">
+            <div class="modal-actions">
               <button id="saveBtn" class="btn-primary">Salvar</button>
               <button id="cancelBtn" type="button">Cancelar</button>
             </div>
-
           </div>
         </div>
       </form>
     </div>
   </div>
 
-  <input id="fileImportInput" type="file" accept="application/json" style="display:none" />
+  <input id="fileImportInput" type="file" accept="application/json" style="display:none" aria-hidden="true" />
 
   <!-- Floating Action Button -->
-  <button id="fabAdd" class="fab" title="Adicionar novo presente">+</button>
+  <button id="fabAdd" class="fab" aria-label="Adicionar novo presente" title="Adicionar novo presente">+</button>
 
   <script>
     (()=>{
+      'use strict';
       const LS_KEY = 'felixo_gifts_v1';
-      const q = s=>document.querySelector(s);
-      const el = id=>document.getElementById(id);
+      const q  = s  => document.querySelector(s);
+      const el = id => document.getElementById(id);
 
-      // state
+      // ---- estado ----
       let gifts = load();
       let editingId = null;
+      let lastFocused = null; // foco a restaurar ao fechar o modal
 
-      const listEl = q('#list');
+      const listEl  = q('#list');
       const emptyEl = q('#empty');
+      const modalEl = q('#modal');
 
-      // UI wired
+      // ============================================================
+      // Validação de URL — bloqueia esquemas perigosos (javascript:, data:, etc.)
+      // Usada antes de abrir/copiar links e ao definir a imagem por URL.
+      // ============================================================
+      function safeUrl(raw){
+        const s = (raw || '').trim();
+        if(!s) return null;
+        let parsed;
+        try{ parsed = new URL(s); }catch(_){ return null; }
+        return (parsed.protocol === 'http:' || parsed.protocol === 'https:') ? parsed.href : null;
+      }
+      function safeImageUrl(raw){
+        const s = (raw || '').trim();
+        if(!s) return null;
+        // imagens podem vir como data:image/... (upload via FileReader) ou http(s)
+        if(s.startsWith('data:image/')) return s;
+        return safeUrl(s);
+      }
+
+      // ---- partículas de fundo (Felixo) ----
+      function spawnParticles(){
+        const host = el('particles');
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(reduce) return;
+        const count = 35;
+        const frag = document.createDocumentFragment();
+        for(let i=0;i<count;i++){
+          const size = Math.random()*4 + 2;          // 2px – 6px
+          const opacity = Math.random()*0.5 + 0.5;   // 0.5 – 1.0
+          const p = document.createElement('div');
+          p.className = 'particle';
+          p.style.left = (Math.random()*100) + '%';
+          p.style.top  = (Math.random()*100) + '%';
+          p.style.width = size + 'px';
+          p.style.height = size + 'px';
+          p.style.setProperty('--p-opacity', opacity);
+          p.style.animationDuration = (Math.random()*8 + 4) + 's'; // 4s – 12s
+          p.style.animationDelay = (Math.random()*2) + 's';        // 0s – 2s
+          frag.appendChild(p);
+        }
+        host.appendChild(frag);
+      }
+
+      // ============================================================
+      // Wiring de UI
+      // ============================================================
       el('btnAdd').addEventListener('click', ()=>openModal());
       el('fabAdd').addEventListener('click', ()=>openModal());
       el('btnExport').addEventListener('click', exportJSON);
@@ -188,149 +462,272 @@
       el('giftForm').addEventListener('submit', saveGift);
       el('sortBy').addEventListener('change', render);
       el('filterPurchased').addEventListener('change', render);
-      el('search').addEventListener('input', ()=>render());
+      el('search').addEventListener('input', render);
 
-      // render initial
+      // fecha o modal com Esc ou clique no overlay
+      document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modalEl.style.display==='flex') closeModal(); });
+      modalEl.addEventListener('mousedown', e=>{ if(e.target===modalEl) closeModal(); });
+
+      spawnParticles();
       render();
 
-      // functions
-      function uid(){return 'g_'+Math.random().toString(36).slice(2,9)}
-      function load(){try{return JSON.parse(localStorage.getItem(LS_KEY))||[]}catch(e){return []}}
-      function saveAll(){localStorage.setItem(LS_KEY, JSON.stringify(gifts))}
+      // ============================================================
+      // Persistência
+      // ============================================================
+      function uid(){ return 'g_'+Math.random().toString(36).slice(2,9); }
+      function load(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(_){ return []; } }
+      function saveAll(){ localStorage.setItem(LS_KEY, JSON.stringify(gifts)); }
 
+      // ============================================================
+      // Modal
+      // ============================================================
       function openModal(gift=null){
+        lastFocused = document.activeElement;
         editingId = gift ? gift.id : null;
         q('#modalTitle').textContent = gift ? 'Editar presente' : 'Novo presente';
-        el('title').value = gift?.title||'';
-        el('price').value = gift?.price!=null?String(gift.price):'';
-        el('currency').value = gift?.currency||'R$';
-        el('url').value = gift?.url||'';
-        el('tags').value = (gift?.tags||[]).join(' ');
-        el('notes').value = gift?.notes||'';
-        el('imgUrl').value = gift?.imageData && gift.imageIsURL ? gift.imageData : '';
-        el('preview').src = gift?.imageData||'';
-        if(gift?.imageData){ el('preview').style.display='block'; el('previewEmpty').style.display='none'; } else { el('preview').style.display='none'; el('previewEmpty').style.display='block'; }
+        el('title').value    = gift?.title || '';
+        el('price').value    = gift?.price != null ? String(gift.price) : '';
+        el('currency').value = gift?.currency || 'R$';
+        el('url').value      = gift?.url || '';
+        el('tags').value     = (gift?.tags || []).join(' ');
+        el('notes').value    = gift?.notes || '';
+        // imageIsURL distingue URL de base64; só preenche o campo de URL quando for de fato uma URL
+        el('imgUrl').value   = (gift?.imageData && gift?.imageIsURL) ? gift.imageData : '';
+        setPreview(gift?.imageData || '');
         el('purchased').checked = !!gift?.purchased;
-        q('#modal').style.display = 'flex';
-        window.scrollTo(0,0);
+        modalEl.style.display = 'flex';
+        el('title').focus();
       }
 
       function closeModal(){
-        q('#modal').style.display='none';
+        modalEl.style.display = 'none';
         el('giftForm').reset();
-        el('preview').src = '';
-        el('preview').style.display='none'; el('previewEmpty').style.display='block';
+        setPreview('');
         editingId = null;
+        if(lastFocused && typeof lastFocused.focus === 'function') lastFocused.focus();
       }
 
+      function setPreview(src){
+        const img = el('preview'), ph = el('previewEmpty');
+        if(src){ img.src = src; img.style.display='block'; ph.style.display='none'; }
+        else   { img.removeAttribute('src'); img.style.display='none'; ph.style.display='block'; }
+      }
+
+      // ============================================================
+      // Salvar presente — preserva o contrato do objeto `gift`
+      // ============================================================
       function saveGift(ev){
         ev.preventDefault();
         const title = el('title').value.trim();
+        if(!title){ alert('Preencha o título.'); el('title').focus(); return; }
+
         const priceRaw = el('price').value.trim();
         const price = priceRaw === '' ? null : parseFloat(priceRaw);
-        const currency = el('currency').value.trim()||'R$';
-        const url = el('url').value.trim();
+        const currency = el('currency').value.trim() || 'R$';
+
+        const urlRaw = el('url').value.trim();
+        const url = urlRaw ? (safeUrl(urlRaw) || '') : '';
+        if(urlRaw && !url){ alert('O link do anúncio precisa começar com http:// ou https://'); el('url').focus(); return; }
+
         const tags = el('tags').value.trim().split(/[\s,]+/).map(t=>t.trim()).filter(Boolean);
         const notes = el('notes').value.trim();
         const purchased = el('purchased').checked;
-        const imageData = el('preview').src || '';
 
-        if(!title){alert('Preencha o título.'); return}
+        const previewSrc = el('preview').getAttribute('src') || '';
+        const imageData = safeImageUrl(previewSrc) || '';
+        const imageIsURL = !!imageData && !imageData.startsWith('data:');
 
         if(editingId){
           const g = gifts.find(x=>x.id===editingId);
           if(!g) return;
-          g.title = title; g.price = price; g.currency = currency; g.url = url; g.tags = tags; g.notes = notes; g.purchased = purchased; g.imageData = imageData; g.updatedAt = Date.now();
+          Object.assign(g, { title, price, currency, url, tags, notes, purchased, imageData, imageIsURL, updatedAt: Date.now() });
         } else {
-          const newG = {id:uid(), title, price, currency, url, tags, notes, purchased, imageData, createdAt:Date.now(), updatedAt:Date.now() };
-          gifts.unshift(newG);
+          gifts.unshift({ id:uid(), title, price, currency, url, tags, notes, purchased, imageData, imageIsURL, createdAt:Date.now(), updatedAt:Date.now() });
         }
         saveAll();
         closeModal();
         render();
       }
 
+      // ============================================================
+      // Render
+      // ============================================================
       function render(){
-        // filter/search/sort
         const search = el('search').value.trim().toLowerCase();
         const filter = el('filterPurchased').value;
         const sortBy = el('sortBy').value;
 
         let out = gifts.filter(g=>{
           if(filter==='yes' && !g.purchased) return false;
-          if(filter==='not' && g.purchased) return false;
+          if(filter==='not' &&  g.purchased) return false;
           if(!search) return true;
           const hay = (g.title+' '+(g.tags||[]).join(' ')+' '+(g.notes||'')).toLowerCase();
           return hay.includes(search) || (g.url||'').toLowerCase().includes(search);
         });
 
         if(sortBy==='date_desc') out.sort((a,b)=>b.createdAt - a.createdAt);
-        if(sortBy==='date_asc') out.sort((a,b)=>a.createdAt - b.createdAt);
-        if(sortBy==='price_asc') out.sort((a,b)=> (a.price||Infinity) - (b.price||Infinity) );
-        if(sortBy==='price_desc') out.sort((a,b)=> (b.price||-Infinity) - (a.price||-Infinity) );
+        if(sortBy==='date_asc')  out.sort((a,b)=>a.createdAt - b.createdAt);
+        if(sortBy==='price_asc')  out.sort((a,b)=> (a.price ?? Infinity)  - (b.price ?? Infinity));
+        if(sortBy==='price_desc') out.sort((a,b)=> (b.price ?? -Infinity) - (a.price ?? -Infinity));
 
         listEl.innerHTML = '';
-        if(out.length===0){ emptyEl.style.display='block'; } else { emptyEl.style.display='none'; }
+        emptyEl.style.display = out.length===0 ? 'block' : 'none';
 
         out.forEach(g=>{
-          const card = document.createElement('div'); card.className='gift-card card'+(g.purchased? ' purchased':'' );
+          const card = document.createElement('div');
+          card.className = 'gift-card card' + (g.purchased ? ' purchased' : '');
+
+          // imagem
           const imgWrap = document.createElement('div'); imgWrap.className='gift-image';
-          if(g.imageData){ const img = document.createElement('img'); img.src = g.imageData; imgWrap.appendChild(img);} else { const p = document.createElement('div'); p.style.color='var(--muted)'; p.textContent='Sem imagem'; imgWrap.appendChild(p);} 
+          const imgSrc = safeImageUrl(g.imageData);
+          if(imgSrc){
+            const img = document.createElement('img'); img.src = imgSrc; img.alt = g.title; img.loading='lazy';
+            imgWrap.appendChild(img);
+          } else {
+            imgWrap.textContent = 'Sem imagem';
+          }
+
           const body = document.createElement('div'); body.className='gift-body';
           const head = document.createElement('div'); head.className='gift-title';
           const t = document.createElement('div'); t.className='title'; t.textContent = g.title;
-          const pprice = document.createElement('div'); pprice.className='price'; pprice.textContent = g.price!=null ? (g.currency+' '+formatNumber(g.price)) : '—';
+          const pprice = document.createElement('div'); pprice.className='price';
+          pprice.textContent = g.price!=null ? (g.currency+' '+formatNumber(g.price)) : '—';
           head.appendChild(t); head.appendChild(pprice);
+          if(g.purchased){
+            const b = document.createElement('span'); b.className='badge-status'; b.textContent='✓ Comprado';
+            head.appendChild(b);
+          }
 
-          const tagsWrap = document.createElement('div'); tagsWrap.className='tags'; (g.tags||[]).forEach(tag=>{const s=document.createElement('div'); s.className='tag'; s.textContent=tag; tagsWrap.appendChild(s)});
-
-          const note = document.createElement('div'); note.className='note'; note.textContent = g.notes? g.notes: '';
+          const tagsWrap = document.createElement('div'); tagsWrap.className='tags';
+          (g.tags||[]).forEach(tag=>{ const s=document.createElement('span'); s.className='tag'; s.textContent=tag; tagsWrap.appendChild(s); });
 
           const actions = document.createElement('div'); actions.className='actions';
-          const btnView = document.createElement('button'); btnView.className='small'; btnView.textContent='Abrir link'; btnView.onclick = ()=>{ if(g.url) window.open(g.url, '_blank'); else alert('Sem link cadastrado.'); };
-          const btnToggle = document.createElement('button'); btnToggle.className='small'; btnToggle.textContent = g.purchased? 'Desmarcar' : 'Marcar comprado'; btnToggle.onclick = ()=>{ g.purchased = !g.purchased; g.updatedAt = Date.now(); saveAll(); render(); };
-          const btnEdit = document.createElement('button'); btnEdit.className='small'; btnEdit.textContent='Editar'; btnEdit.onclick = ()=>openModal(g);
-          const btnDel = document.createElement('button'); btnDel.className='small'; btnDel.textContent='Apagar'; btnDel.onclick = ()=>{ if(confirm('Apagar este presente?')){ gifts = gifts.filter(x=>x.id!==g.id); saveAll(); render(); } };
-          const btnCopy = document.createElement('button'); btnCopy.className='small'; btnCopy.textContent='Copiar link'; btnCopy.onclick = ()=>{ if(!g.url) return alert('Sem link'); navigator.clipboard.writeText(g.url).then(()=>alert('Link copiado')); };
+          const safeLink = safeUrl(g.url);
 
-          actions.appendChild(btnView); actions.appendChild(btnToggle); actions.appendChild(btnEdit); actions.appendChild(btnCopy); actions.appendChild(btnDel);
+          const btnView = mkBtn('Abrir link', ()=>{
+            if(safeLink) window.open(safeLink, '_blank', 'noopener,noreferrer');
+            else alert('Sem link válido cadastrado.');
+          });
+          const btnToggle = mkBtn(g.purchased ? 'Desmarcar' : 'Marcar comprado', ()=>{
+            g.purchased = !g.purchased; g.updatedAt = Date.now(); saveAll(); render();
+          });
+          const btnEdit = mkBtn('Editar', ()=>openModal(g));
+          const btnCopy = mkBtn('Copiar link', ()=>{
+            if(!safeLink) return alert('Sem link válido.');
+            navigator.clipboard.writeText(safeLink).then(()=>alert('Link copiado')).catch(()=>alert('Não foi possível copiar.'));
+          });
+          const btnDel = mkBtn('Apagar', ()=>{
+            if(confirm('Apagar este presente?')){ gifts = gifts.filter(x=>x.id!==g.id); saveAll(); render(); }
+          });
 
-          body.appendChild(head); body.appendChild(tagsWrap); if(g.notes) body.appendChild(note); body.appendChild(actions);
+          actions.append(btnView, btnToggle, btnEdit, btnCopy, btnDel);
+
+          body.appendChild(head);
+          if((g.tags||[]).length) body.appendChild(tagsWrap);
+          if(g.notes){ const note=document.createElement('div'); note.className='note'; note.textContent=g.notes; body.appendChild(note); }
+          body.appendChild(actions);
 
           card.appendChild(imgWrap); card.appendChild(body);
           listEl.appendChild(card);
         });
       }
 
-      function formatNumber(n){ return Number(n).toLocaleString(undefined,{minimumFractionDigits: n%1?2:0, maximumFractionDigits:2}) }
-
-      function useImgUrl(){ const url = el('imgUrl').value.trim(); if(!url) return alert('Cole a URL da imagem'); // attempt to show
-        el('preview').src = url; el('preview').style.display='block'; el('previewEmpty').style.display='none';
+      function mkBtn(label, onClick){
+        const b = document.createElement('button');
+        b.type='button'; b.className='small'; b.textContent=label;
+        b.addEventListener('click', onClick);
+        return b;
       }
 
-      function handleImgFile(e){ const f = e.target.files && e.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{ el('preview').src = reader.result; el('preview').style.display='block'; el('previewEmpty').style.display='none'; }; reader.readAsDataURL(f); }
+      function formatNumber(n){
+        return Number(n).toLocaleString(undefined, { minimumFractionDigits: n%1?2:0, maximumFractionDigits:2 });
+      }
 
-      function exportJSON(){ const data = JSON.stringify(gifts, null, 2); const blob = new Blob([data], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'felixo_gifts_export_'+(new Date().toISOString().slice(0,10))+'.json'; a.click(); URL.revokeObjectURL(url); }
+      // ============================================================
+      // Imagem
+      // ============================================================
+      function useImgUrl(){
+        const url = safeImageUrl(el('imgUrl').value);
+        if(!url){ alert('Cole uma URL de imagem válida (http:// ou https://).'); return; }
+        setPreview(url);
+      }
+      function handleImgFile(e){
+        const f = e.target.files && e.target.files[0];
+        if(!f) return;
+        const reader = new FileReader();
+        reader.onload = ()=> setPreview(reader.result);
+        reader.readAsDataURL(f);
+      }
 
-      function handleImportFile(e){ const f = e.target.files && e.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{ try{ const imported = JSON.parse(reader.result); if(!Array.isArray(imported)) return alert('Formato inválido'); // merge
-          // basic sanitization: keep only known props
-          const valid = imported.map(it=>({ id: it.id||uid(), title: it.title||'Sem título', price: it.price==null?null:Number(it.price), currency: it.currency||'R$', url: it.url||'', tags: Array.isArray(it.tags)?it.tags: (typeof it.tags==='string'?it.tags.split(',').map(t=>t.trim()):[]), notes: it.notes||'', purchased: !!it.purchased, imageData: it.imageData||'', createdAt: it.createdAt||Date.now(), updatedAt: it.updatedAt||Date.now() }));
-          gifts = valid.concat(gifts); saveAll(); render(); alert('Importação concluída.');
-        }catch(err){ alert('Erro ao importar: ' + err.message) } }
+      // ============================================================
+      // Exportar / Importar JSON — formato estável (array de gifts)
+      // ============================================================
+      function exportJSON(){
+        const data = JSON.stringify(gifts, null, 2);
+        const blob = new Blob([data], { type:'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'felixo_gifts_export_'+(new Date().toISOString().slice(0,10))+'.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function handleImportFile(e){
+        const f = e.target.files && e.target.files[0];
+        if(!f) return;
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          try{
+            const imported = JSON.parse(reader.result);
+            if(!Array.isArray(imported)){ alert('Formato inválido: esperado um array de presentes.'); return; }
+            const valid = imported.map(it=>{
+              const tags = Array.isArray(it.tags)
+                ? it.tags
+                : (typeof it.tags==='string' ? it.tags.split(',').map(t=>t.trim()).filter(Boolean) : []);
+              const imageData = safeImageUrl(it.imageData) || '';
+              return {
+                id: it.id || uid(),
+                title: (typeof it.title==='string' && it.title.trim()) || 'Sem título',
+                price: it.price==null ? null : Number(it.price),
+                currency: it.currency || 'R$',
+                url: safeUrl(it.url) || '',
+                tags,
+                notes: typeof it.notes==='string' ? it.notes : '',
+                purchased: !!it.purchased,
+                imageData,
+                imageIsURL: !!imageData && !imageData.startsWith('data:'),
+                createdAt: it.createdAt || Date.now(),
+                updatedAt: it.updatedAt || Date.now()
+              };
+            });
+            gifts = valid.concat(gifts);
+            saveAll(); render();
+            alert('Importação concluída ('+valid.length+' presente(s)).');
+          }catch(err){
+            alert('Erro ao importar: ' + err.message);
+          }finally{
+            e.target.value = ''; // permite reimportar o mesmo arquivo
+          }
+        };
         reader.readAsText(f);
       }
 
-      function clearAll(){ if(!confirm('Apagar todos os presentes salvos?')) return; gifts = []; saveAll(); render(); }
+      function clearAll(){
+        if(!confirm('Apagar todos os presentes salvos?')) return;
+        gifts = []; saveAll(); render();
+      }
 
-      // load sample data if empty (helpful first run)
-      if(gifts.length===0){ gifts = [
-        {id:uid(), title:'Colar minimalista', price:129.9, currency:'R$', url:'', tags:['aniversário','joias'], notes:'Verificar tamanho do pingente. Preferência: prata.', purchased:false, imageData:'', createdAt:Date.now(), updatedAt:Date.now()},
-        {id:uid(), title:'Placa de LED decorativa', price:199.0, currency:'R$', url:'', tags:['decoração','nerd'], notes:'Combina com quarto escuro', purchased:false, imageData:'', createdAt:Date.now(), updatedAt:Date.now()}
-      ]; saveAll(); }
-
-      // initial render again
-      render();
-
+      // ============================================================
+      // Dados de exemplo no primeiro uso (evita tela em branco)
+      // ============================================================
+      if(gifts.length===0){
+        gifts = [
+          { id:uid(), title:'Colar minimalista', price:129.9, currency:'R$', url:'', tags:['aniversário','joias'], notes:'Verificar tamanho do pingente. Preferência: prata.', purchased:false, imageData:'', imageIsURL:false, createdAt:Date.now(), updatedAt:Date.now() },
+          { id:uid(), title:'Placa de LED decorativa', price:199.0, currency:'R$', url:'', tags:['decoração','nerd'], notes:'Combina com quarto escuro', purchased:false, imageData:'', imageIsURL:false, createdAt:Date.now(), updatedAt:Date.now() }
+        ];
+        saveAll();
+        render();
+      }
     })();
   </script>
 </body>
