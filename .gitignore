@@ -1,2 +1,10 @@
-
+# Padrões de qualidade Felixo (sincronizados à parte, fora do versionamento do projeto)
 /felixo-standards
+/Padrão de qualidade - Felixo System Design
+
+# Configuração local do menu de entrada (start_app.py)
+/.start_app.json
+
+# Artefatos Python
+__pycache__/
+*.pyc

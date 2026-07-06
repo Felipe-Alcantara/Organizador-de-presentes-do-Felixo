@@ -27,6 +27,8 @@ Prioridade: simplicidade e zero dependências de servidor.
 [2026-06-01] ✅ Concluída — Redesign do `index.html` aplicando o Felixo Frontend Design System (paleta zinc/black, glow respirante, partículas roxas, cards do design system)  
 [2026-06-01] ✅ Concluída — Acessibilidade: modal com `role="dialog"`/`aria-modal`, fechar com Esc/overlay, restauração de foco, `aria-label` no FAB, labels `sr-only` nos controles  
 [2026-06-01] ✅ Concluída — Validação de URL contra XSS (bloqueio de `javascript:`/`data:` em links) e correção do contrato `imageIsURL`  
+[2026-07-06] ✅ Concluída — Painel de estatísticas (KPI row): contagem de registrados/comprados/faltando, valor total e restante, barra de progresso com % comprado  
+[2026-07-06] ✅ Concluída — `start_app.py` (menu de entrada padrão Felixo) com Instalar/Setup, Configurar, Iniciar/Rodar e Status/Sair  
 
 ---
 
@@ -47,6 +49,7 @@ Prioridade: simplicidade e zero dependências de servidor.
 [2026-04-27] IIFE (immediately invoked function expression) no script — encapsula todo o estado sem poluir o escopo global.  
 [2026-04-27] Imagens armazenadas como base64 via FileReader — permite persistir imagens locais sem servidor de upload.  
 [2026-04-27] Dados de exemplo inseridos no primeiro uso (`gifts.length === 0`) — melhora onboarding sem tela em branco.  
+[2026-07-06] `start_app.py` como porta de entrada única (contrato Felixo GUIA-START-APP-SCRIPT). Como o site é estático, "Iniciar/Rodar" sobe um `ThreadingHTTPServer` local (stdlib, zero deps extras) servindo a pasta do projeto via `http://` — evita as restrições de `localStorage` em `file://`. Servidor roda em thread daemon com start/stop; handler silencioso (`_QuietHandler`) para não poluir o menu. Menu interativo com `questionary` + `rich`; bootstrap pergunta se instala essas duas libs se faltarem. Config local (porta, abrir navegador) em `.start_app.json`, ignorado pelo git.  
 
 ---
 
@@ -67,6 +70,7 @@ Prioridade: simplicidade e zero dependências de servidor.
 [2026-06-01] Presentes comprados: `.gift-card.purchased` com `opacity:0.55` + `grayscale(0.35)` (no hover sobe para `0.85`/`0.1`) — destaque visual de "já comprado" que se perdera no redesign.  
 [2026-06-01] Container alargado de `max-width:1280px` para `1600px` e grade 'auto' com `minmax(230px,1fr)` (era 260px) — preenche melhor telas largas.  
 [2026-06-01] Título e nota dos cards limitados com `-webkit-line-clamp` (título 2 linhas, nota 3 linhas) + `title` (tooltip) com o texto completo — cards ficam com altura uniforme em vez de esticar com textos longos.  
+[2026-07-06] Painel de estatísticas seguindo o skill de dataviz (KPI row de stat tiles, não gráfico): número é a própria "visualização". Faixa `.stats` (card do design system) entre a topbar e a grade, com 4 tiles (Registrados, Comprados, Faltam, Valor total) + barra de progresso. Divisórias `border-left` sutis entre tiles; medidor roxo (`--felixo-purple-bright → --felixo-purple`) sobre trilho `rgba(168,85,247,0.15)` (mesma rampa, blue-on-blue). Função `updateStats()` chamada no início de `render()`; conta SEMPRE sobre todos os `gifts` (ignora busca/filtro) para ser a foto geral da coleção. `role="progressbar"` + `aria-valuenow`; valores usam `formatNumber()` já existente e a moeda do primeiro presente com preço.  
 
 ---
 
@@ -77,6 +81,7 @@ Prioridade: simplicidade e zero dependências de servidor.
 [2026-04-27] ✅ Importar JSON — mescla dados importados com os existentes; sanitiza campos.  
 [2026-04-27] ✅ Upload de imagem via arquivo — converte para base64 e exibe preview em tempo real.  
 [2026-04-27] ✅ Busca em tempo real — pesquisa em título, tags e notas simultaneamente.  
+[2026-07-06] ✅ `start_app.py` — smoke test do servidor: `LocalServer.start()` serve `index.html` com HTTP 200 e o conteúdo esperado; `port_in_use()` detecta porta ocupada; `stop()` libera a porta. Sintaxe validada via `ast.parse`. Menu interativo em si verificado por inspeção (não automatizável sem TTY).  
 
 ---
 
