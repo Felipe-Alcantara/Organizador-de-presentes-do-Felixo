@@ -150,6 +150,40 @@
     }
     .small{padding:7px 12px;font-size:13px;border-radius:0.75rem}
 
+    /* ============================================================
+       Faixa de estatísticas (KPI row)
+       ============================================================ */
+    .stats{
+      display:flex;flex-wrap:wrap;align-items:stretch;
+      padding:16px 20px;margin-top:16px;gap:0;
+    }
+    .stat{
+      flex:1;min-width:130px;padding:4px 20px;
+      display:flex;flex-direction:column;gap:2px;
+    }
+    .stat + .stat{border-left:1px solid var(--border-subtle)}
+    .stat-label{font-size:12px;color:var(--text-400);letter-spacing:0.2px}
+    .stat-value{font-size:26px;font-weight:600;color:var(--text-50);line-height:1.2;font-variant-numeric:tabular-nums}
+    .stat-sub{font-size:12px;color:var(--text-400)}
+    .stat-progress{
+      flex:2.2;min-width:220px;padding:4px 20px;
+      display:flex;flex-direction:column;gap:6px;justify-content:center;
+      border-left:1px solid var(--border-subtle);
+    }
+    .meter{
+      height:8px;border-radius:9999px;overflow:hidden;
+      background:rgba(168,85,247,0.15);
+    }
+    .meter-fill{
+      height:100%;border-radius:9999px;width:0%;
+      background:linear-gradient(90deg,var(--felixo-purple-bright),var(--felixo-purple));
+      transition:width .4s ease;
+    }
+    @media (max-width:720px){
+      .stats{gap:12px}
+      .stat,.stat-progress{border-left:none;padding:4px 0;min-width:40%}
+    }
+
     /* ---- Grid de cards ---- */
     .grid{
       display:grid;
@@ -338,6 +372,32 @@
             <button id="btnExport">Exportar JSON</button>
             <button id="btnImport">Importar JSON</button>
             <button id="btnClear">Limpar tudo</button>
+          </div>
+        </div>
+
+        <div id="stats" class="stats card" aria-live="polite">
+          <div class="stat">
+            <span class="stat-label">Registrados</span>
+            <span class="stat-value" id="statTotal">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Comprados</span>
+            <span class="stat-value" id="statPurchased">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Faltam</span>
+            <span class="stat-value" id="statRemaining">0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Valor total</span>
+            <span class="stat-value" id="statValueTotal">—</span>
+            <span class="stat-sub" id="statValueRemaining"></span>
+          </div>
+          <div class="stat-progress">
+            <span class="stat-label" id="meterLabel">0% comprado</span>
+            <div class="meter" role="progressbar" aria-labelledby="meterLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meterTrack">
+              <div class="meter-fill" id="meterFill"></div>
+            </div>
           </div>
         </div>
 
@@ -615,7 +675,37 @@
       // ============================================================
       // Render
       // ============================================================
+      // Estatísticas gerais — sempre sobre TODOS os presentes (ignora busca/filtro)
+      function updateStats(){
+        const total = gifts.length;
+        const purchased = gifts.filter(g=>g.purchased).length;
+        const remaining = total - purchased;
+
+        el('statTotal').textContent = String(total);
+        el('statPurchased').textContent = String(purchased);
+        el('statRemaining').textContent = String(remaining);
+
+        // soma de valores (só presentes com preço preenchido)
+        const priced = gifts.filter(g=>typeof g.price==='number' && isFinite(g.price));
+        const sum = arr => arr.reduce((acc,g)=>acc+g.price, 0);
+        const currency = (priced[0]?.currency) || 'R$';
+        if(priced.length){
+          el('statValueTotal').textContent = currency+' '+formatNumber(sum(priced));
+          const remValue = sum(priced.filter(g=>!g.purchased));
+          el('statValueRemaining').textContent = 'faltam '+currency+' '+formatNumber(remValue);
+        } else {
+          el('statValueTotal').textContent = '—';
+          el('statValueRemaining').textContent = '';
+        }
+
+        const pct = total ? Math.round(purchased/total*100) : 0;
+        el('meterLabel').textContent = pct+'% comprado ('+purchased+' de '+total+')';
+        el('meterFill').style.width = pct+'%';
+        el('meterTrack').setAttribute('aria-valuenow', String(pct));
+      }
+
       function render(){
+        updateStats();
         const search = el('search').value.trim().toLowerCase();
         const filter = el('filterPurchased').value;
         const sortBy = el('sortBy').value;
