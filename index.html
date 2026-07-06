@@ -209,6 +209,34 @@
     @media (max-width:560px){
       .grid[data-cols]{grid-template-columns:1fr}
     }
+    /* ---- Alternador Grade / Lista (segmentado) ---- */
+    .viewtoggle{display:inline-flex;gap:0;border:1px solid var(--border);border-radius:0.75rem;overflow:hidden}
+    .viewtoggle button{border:none;border-radius:0;background:rgba(39,39,42,0.6);margin:0}
+    .viewtoggle button + button{border-left:1px solid var(--border)}
+    .viewtoggle button[aria-pressed="true"]{
+      background:linear-gradient(135deg,var(--felixo-purple-bright),var(--felixo-purple));
+      color:#fff;font-weight:600;
+    }
+
+    /* ---- Modo lista: cada presente vira uma linha horizontal ---- */
+    .grid.list-view{display:flex;flex-direction:column;gap:12px;grid-template-columns:none}
+    .list-view .gift-card{flex-direction:row;align-items:stretch}
+    .list-view .gift-image{
+      width:120px;min-width:120px;height:auto;min-height:88px;
+      border-bottom:none;border-right:1px solid var(--border-subtle);
+    }
+    .list-view .gift-body{flex:1;min-width:0;flex-direction:row;align-items:center;gap:16px;padding:14px 18px}
+    .list-view .gift-title{flex:1;min-width:0;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 14px}
+    .list-view .title{-webkit-line-clamp:1;line-clamp:1}
+    .list-view .badge-status{margin-top:0}
+    .list-view .tags,.list-view .note{display:none}       /* linha compacta e uniforme */
+    .list-view .actions{margin-top:0;flex-shrink:0}
+    @media (max-width:560px){
+      .list-view .gift-card{flex-direction:column}
+      .list-view .gift-image{width:100%;border-right:none;border-bottom:1px solid var(--border-subtle)}
+      .list-view .gift-body{flex-direction:column;align-items:flex-start}
+    }
+
     .gift-card{
       display:flex;flex-direction:column;overflow:hidden;
       border-radius:var(--radius-lg);
@@ -352,6 +380,11 @@
               <option value="not">Não comprados</option>
               <option value="yes">Comprados</option>
             </select>
+
+            <div class="viewtoggle" role="group" aria-label="Modo de visualização">
+              <button id="viewGrid" type="button" class="small" aria-pressed="true" title="Ver em grade">▦ Grade</button>
+              <button id="viewList" type="button" class="small" aria-pressed="false" title="Ver em lista">☰ Lista</button>
+            </div>
 
             <label for="gridCols" class="sr-only">Cards por linha</label>
             <select id="gridCols" title="Cards por linha">
@@ -502,6 +535,7 @@
       let gifts = load();
       let editingId = null;
       let lastFocused = null; // foco a restaurar ao fechar o modal
+      let viewMode = 'grid';  // modo de visualização: 'grid' (grade) ou 'list' (lista)
 
       const listEl  = q('#list');
       const emptyEl = q('#empty');
@@ -567,6 +601,8 @@
       el('filterPurchased').addEventListener('change', render);
       el('search').addEventListener('input', render);
       el('gridCols').addEventListener('change', ()=>{ savePrefs(); applyGridCols(); });
+      el('viewGrid').addEventListener('click', ()=>setViewMode('grid'));
+      el('viewList').addEventListener('click', ()=>setViewMode('list'));
 
       // fecha o modal com Esc ou clique no overlay
       document.addEventListener('keydown', e=>{ if(e.key==='Escape' && modalEl.style.display==='flex') closeModal(); });
@@ -575,6 +611,7 @@
       spawnParticles();
       loadPrefs();
       applyGridCols();
+      applyViewMode();
       render();
 
       // ============================================================
@@ -589,16 +626,32 @@
         try{
           const prefs = JSON.parse(localStorage.getItem(PREFS_KEY)) || {};
           if(prefs.gridCols) el('gridCols').value = prefs.gridCols;
+          if(prefs.viewMode === 'list' || prefs.viewMode === 'grid') viewMode = prefs.viewMode;
         }catch(_){ /* ignora prefs corrompidas */ }
       }
       function savePrefs(){
-        localStorage.setItem(PREFS_KEY, JSON.stringify({ gridCols: el('gridCols').value }));
+        localStorage.setItem(PREFS_KEY, JSON.stringify({ gridCols: el('gridCols').value, viewMode }));
       }
       // aplica o nº de colunas escolhido; 'auto' remove o override (volta ao auto-fill responsivo)
       function applyGridCols(){
         const cols = el('gridCols').value;
         if(cols === 'auto') listEl.removeAttribute('data-cols');
         else listEl.setAttribute('data-cols', cols);
+      }
+      // troca grade ↔ lista, persistindo a escolha
+      function setViewMode(mode){
+        viewMode = (mode === 'list') ? 'list' : 'grid';
+        savePrefs();
+        applyViewMode();
+      }
+      // aplica o modo atual: alterna a classe, os botões e esconde o seletor de colunas na lista
+      function applyViewMode(){
+        const isList = viewMode === 'list';
+        listEl.classList.toggle('list-view', isList);
+        el('viewGrid').setAttribute('aria-pressed', String(!isList));
+        el('viewList').setAttribute('aria-pressed', String(isList));
+        // nº de colunas só faz sentido na grade
+        el('gridCols').style.display = isList ? 'none' : '';
       }
 
       // ============================================================
